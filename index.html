@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="pt">
+<!-- @author: João Gouveia -->
+<head>
+  <meta charset="UTF-8" />
+  <title>Ferramenta de apoio à prescrição de TSR contínuas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <h1 class="app-title">RenalCalc</h1>
+      <p class="app-subtitle">TSR Contínuas</p>
+      <nav class="nav">
+        <button class="nav-btn active" data-section="solutions">Composição das soluções</button>
+        <button class="nav-btn" data-section="efluente">Dose de efluente &amp; FF</button>
+        <button class="nav-btn" data-section="hco3">Ajuste de HCO<sub>3</sub><sup>−</sup></button>
+        <button class="nav-btn" data-section="hyperna">Hipernatrémia</button>
+        <button class="nav-btn" data-section="hypoNa">Hiponatrémia</button>
+      </nav>
+      <div class="footer-note">
+        <small>
+          Ferramenta de apoio à prescrição de CRRT<br />
+          Serviço de Medicina Intensiva<br />
+          ULS Almada-Seixal<br />
+          © 2025 JG
+        </small>
+      </div>
+    </aside>
+
+    <main class="main">
+      <!-- SECÇÃO: SOLUÇÕES -->
+      <section id="section-solutions" class="section active">
+        <h2>Composição das soluções</h2>
+        <p class="section-description">
+          Soluções de Diálise e Reposição para Técnica Contínua
+        </p>
+
+        <div class="card">
+          <h3>Composição</h3>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Componente</th>
+                  <th>Prismasol 4</th>
+                  <th>Hemosol B0</th>
+                  <th>Regiocit</th>
+                  <th>Biphozyl</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Na<sup>+</sup> (mEq/L)</td>
+                  <td>140</td>
+                  <td>140</td>
+                  <td>140</td>
+                  <td>140</td>
+                </tr>
+                <tr>
+                  <td>K<sup>+</sup> (mEq/L)</td>
+                  <td>4</td>
+                  <td>–</td>
+                  <td>–</td>
+                  <td>4</td>
+                </tr>
+                <tr>
+                  <td>Cl<sup>−</sup> (mEq/L)</td>
+                  <td>113,5</td>
+                  <td>109,5</td>
+                  <td>86</td>
+                  <td>122</td>
+                </tr>
+                <tr>
+                  <td>Mg<sup>2+</sup> (mEq/L)</td>
+                  <td>0,5</td>
+                  <td>0,5</td>
+                  <td>–</td>
+                  <td>0,75</td>
+                </tr>
+                <tr>
+                  <td>Fosfato (HPO<sub>4</sub><sup>2−</sup>) (mmol/L)</td>
+                  <td>–</td>
+                  <td>–</td>
+                  <td>–</td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td>Ca<sup>2+</sup> (mmol/L)</td>
+                  <td>1,75</td>
+                  <td>1,75</td>
+                  <td>–</td>
+                  <td>–</td>
+                </tr>
+                <tr>
+                  <td>HCO<sub>3</sub><sup>−</sup> (mEq/L)</td>
+                  <td>32</td>
+                  <td>32</td>
+                  <td>–</td>
+                  <td>22</td>
+                </tr>
+                <tr>
+                  <td>Citrato (C<sub>6</sub>H<sub>5</sub>O<sub>7</sub><sup>3−</sup>) (mmol/L)</td>
+                  <td>–</td>
+                  <td>–</td>
+                  <td>18</td>
+                  <td>–</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECÇÃO: EFLUENTE & FF -->
+      <section id="section-efluente" class="section">
+        <h2>Dose de efluente &amp; Fração de Filtração</h2>
+        <p class="section-description">
+          Cálculo da dose de diálise e FF
+        </p>
+
+        <div class="grid-2">
+          <div class="card">
+            <h3>Entradas</h3>
+            <div class="field-group">
+              <h4>Fluxos (mL/h)</h4>
+              <label>
+                PBS
+                <input id="pbsInput" type="number" value="0" step="50" />
+              </label>
+              <label>
+                Reposição pré-filtro
+                <input id="repPreInput" type="number" value="1000" step="50" />
+              </label>
+              <label>
+                Dialisante
+                <input id="dialInput" type="number" value="1000" step="50" />
+              </label>
+              <label>
+                Reposição pós-filtro
+                <input id="repPosInput" type="number" value="500" step="50" />
+              </label>
+              <label>
+                UF
+                <input id="ufInput" type="number" value="20" step="10" />
+              </label>
+            </div>
+
+            <div class="field-group">
+              <h4>Doente</h4>
+              <label>
+                Qb (mL/min)
+                <input id="qbInput" type="number" value="150" step="10" />
+              </label>
+              <label>
+                Htc (%)
+                <input id="htcInput" type="number" value="35" step="1" />
+              </label>
+              <label>
+                Peso (kg)
+                <input id="pesoInput" type="number" value="70" step="1" />
+              </label>
+            </div>
+
+            <button id="calcEfluenteBtn" class="primary-btn">Calcular</button>
+          </div>
+
+          <div class="card">
+            <h3>Resultados</h3>
+            <p class="formula">
+              Dose de efluente = (PBS + Pré + Dialisante + Pós + UF) / Peso
+            </p>
+            <p class="formula">
+              FF (%) = Q<sub>uf</sub> / (Q<sub>plasma</sub> + PBS + Pré) × 100
+              <br />
+              <br />
+            </p>
+            <ul class="results-list">
+              <li>
+                <span>Total de efluente (mL/h)</span>
+                <strong id="totalEfluente">–</strong>
+              </li>
+              <li>
+                <span>Dose de efluente (mL/kg/h)</span>
+                <strong id="doseEfluente">–</strong>
+              </li>
+              <li>
+                <span>Fração de Filtração (FF, %)</span>
+                <strong id="fracFiltracao">–</strong>
+              </li>
+            </ul>
+            <p class="hint">
+                <br />
+              Regra prática: manter FF &lt; 25% para reduzir risco de coagulação do filtro.
+            </p>
+            <p id="ffWarning" class="warning hidden">
+              FF &gt; 25% – atenção ao risco aumentado de coagulação do filtro.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECÇÃO: HCO3 -->
+      <section id="section-hco3" class="section">
+        <h2>Ajuste de HCO<sub>3</sub><sup>−</sup> &nbsp; nas soluções</h2>
+        <p class="section-description">
+          Cálculo do volume de bicarbonato a adicionar aos sacos
+        </p>
+
+        <div class="grid-2">
+          <div class="card">
+            <h3>Soluções</h3>
+            <p>
+              Prismasol / Hemosol: <strong>32 mEq/L</strong><br />
+              Biphozyl: <strong>22 mEq/L</strong><br />
+              Volume do saco: <strong>5 L</strong><br />
+            </p>
+            <label>
+              <span class="no-break">HCO<sub>3</sub><sup>−</sup>&nbsp; pretendido (mEq/L)</span>
+              <input id="hco3TargetInput" type="number" value="40" step="1" />
+            </label>
+            <button id="calcHco3Btn" class="primary-btn">Calcular</button>
+          </div>
+
+          <div class="card">
+            <h3>Volume de NaHCO₃ 8,4% a adicionar</h3>
+            <ul class="results-list">
+              <li>
+                <span>Prismasol / Hemosol (5 L)</span>
+                <strong id="volHco3Prismasol">–</strong>
+              </li>
+              <li>
+                <span>Biphozyl (5 L)</span>
+                <strong id="volHco3Biphozyl">–</strong>
+              </li>
+            </ul>
+            <p class="hint">
+                <br />
+                <br />
+              Cada frasco de NaHCO₃ 8,4%:<br />
+              Volume: <strong>100 mL</strong><br />
+              Concentração: <strong>1 mEq/mL</strong>
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECÇÃO: HIPERNATRÉMIA -->
+      <section id="section-hyperna" class="section">
+        <h2>Correção de Hipernatrémia</h2>
+        <p class="section-description">
+          Correção alvo <strong> < 8-10 mmol/L em 24h</strong>
+        </p>
+
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="hyper-sacos">Ajuste dos sacos (NaCl 20%)</button>
+          <button class="tab-btn" data-tab="hyper-perfusao">Perfusão de NaCl 3%</button>
+        </div>
+
+        <!-- TAB: AJUSTE DOS SACOS -->
+        <div id="tab-hyper-sacos" class="tab-panel active">
+          <div class="grid-2">
+            <div class="card">
+              <h3>Ajuste da concentração de Na<sup>+</sup> dos sacos</h3>
+              <p class="hint">
+                Soluções:
+                <br />• Na<sup>+</sup> da solução base: <strong>140 mEq/L</strong>
+                <br />• Volume do saco: <strong>5 L</strong>
+              </p>
+              <label>
+                <span class="no-break">Concentração de Na<sup>+</sup> pretendida nos sacos (mEq/L)</span>
+                <input id="hyperNaTargetInput" type="number" value="155" step="1" />
+              </label>
+              <button id="calcHyperSacosBtn" class="primary-btn">Calcular</button>
+            </div>
+
+            <div class="card">
+              <h3>Resultado</h3>
+              <ul class="results-list">
+                <li>
+                  <span>NaCl 20% a adicionar por saco</span>
+                  <strong id="hyperNaBagResult">–</strong>
+                </li>
+              </ul>
+                <p class="hint">
+                    <br />
+                    <br />
+                    Cada ampola de NaCl 20%:<br />
+                    Volume: <strong>20 mL</strong><br />
+                    Concentração: <strong>3,4 mEq/mL</strong>
+                </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: PERFUSÃO NaCl 3% -->
+        <div id="tab-hyper-perfusao" class="tab-panel">
+          <div class="grid-2">
+            <div class="card">
+              <h3>Perfusão de NaCl 3%</h3>
+              <p class="hint">
+                Soluções:
+                <br />• Na<sup>+</sup> da solução base: <strong>140 mEq/L</strong>
+                <br />• Volume do saco: <strong>5 L</strong>
+              </p>
+              <label>
+                Natrémia pretendida no doente (mEq/L)
+                <input id="hyperNaTarget3Input" type="number" value="160" step="1" />
+              </label>
+              <label>
+                Dose de efluente (QD + QRF) (mL/h)
+                <input id="hyperEffluentInput" type="number" value="1500" step="50" />
+              </label>
+              <button id="calcHyperPerfBtn" class="primary-btn">Calcular</button>
+            </div>
+
+            <div class="card">
+              <h3>Resultado</h3>
+              <ul class="results-list">
+                <li>
+                  <span>Perfusão NaCl 3%</span>
+                  <strong id="hyperPerfResult">–</strong>
+                </li>
+              </ul>
+                <p class="hint">
+                    <br />
+                    <br />
+                    Solução de NaCl 3%:<br />
+                    • Balão de NaCl 0,9% 1 L<br />
+                    • Retirar 105 mL<br />
+                    • Colocar 105 mL de NaCl 20%<br />
+                    Concentração: <strong>513 mEq/L</strong>
+                </p>
+            </div>
+          </div>
+        </div>
+        <div class="safety-box">
+            <p>• Monitorizar Natrémia a cada <strong>2 horas</strong></p>
+            <p>• Reavaliar e ajustar prescrição a cada <strong>24 horas</strong> no mínimo</p>
+        </div>
+      </section>
+
+
+      <!-- SECÇÃO: HIPONATRÉMIA -->
+      <section id="section-hypoNa" class="section">
+        <h2>Correção de Hiponatrémia</h2>
+        <p class="section-description">
+          Correção alvo <strong> < 10-12 mmol/L em 24h</strong> ou <strong> < 18 mmol/L em 48h</strong>
+        </p>
+
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="hypo-sacos">Ajuste dos sacos</button>
+          <button class="tab-btn" data-tab="hypo-perfusao">Perfusão Dx5%</button>
+        </div>
+
+        <!-- TAB: AJUSTE DOS SACOS -->
+        <div id="tab-hypo-sacos" class="tab-panel active">
+          <div class="grid-2">
+            <div class="card">
+              <h3>Ajuste da concentração de Na dos sacos</h3>
+              <p class="hint">
+                Soluções:
+                <br />• Na<sup>+</sup> da solução base: <strong>140 mEq/L</strong>
+                <br />• Volume do saco: <strong>5 L</strong>
+              </p>
+              <label>
+                <span class="no-break">Concentração de Na<sup>+</sup> pretendida nos sacos (mEq/L)</span>
+                <input id="hypoNaTargetInput" type="number" value="120" step="1" />
+              </label>
+              <button id="calcHypoSacosBtn" class="primary-btn">Calcular</button>
+            </div>
+
+            <div class="card">
+              <h3>Resultados</h3>
+              <ul class="results-list">
+                <li>
+                  <span>Água a adicionar ao saco</span>
+                  <strong id="hypoWaterAddResult">–</strong>
+                </li>
+                <li>
+                  <span>Água a substituir no saco</span>
+                  <strong id="hypoWaterReplaceResult">–</strong>
+                </li>
+              </ul>
+                <p class="hint">
+                    <br />
+                    Necessário substituir se adicionar > 1 L ao saco
+                </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: PERFUSÃO Dx5% -->
+        <div id="tab-hypo-perfusao" class="tab-panel">
+          <div class="grid-2">
+            <div class="card">
+              <h3>Perfusão de Dx5%</h3>
+              <p class="hint">
+                Soluções:
+                <br />• Na<sup>+</sup> da solução base: <strong>140 mEq/L</strong>
+                <br />• Volume do saco: <strong>5 L</strong>
+              </p>
+              <label>
+                Natrémia pretendida no doente (mEq/L)
+                <input id="hypoNaTargetPerfInput" type="number" value="115" step="1" />
+              </label>
+              <label>
+                Dose de efluente (QD + QRF) (mL/h)
+                <input id="hypoEffluentInput" type="number" value="2000" step="50" />
+              </label>
+              <button id="calcHypoPerfBtn" class="primary-btn">Calcular</button>
+            </div>
+
+            <div class="card">
+              <h3>Resultado</h3>
+              <ul class="results-list">
+                <li>
+                  <span>Perfusão Dx5%</span>
+                  <strong id="hypoPerfResult">–</strong>
+                </li>
+              </ul>
+              <p class="hint">
+                <br />
+                <br />
+                Administração sistémica ou pós-filtro
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="safety-box">
+            <p>• Monitorizar Natrémia a cada <strong>2 horas</strong></p>
+            <p>• Reavaliar e ajustar prescrição a cada <strong>24 horas</strong> no mínimo</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="renalcalc.js"></script>
+</body>
+</html>
