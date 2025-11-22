@@ -11,17 +11,35 @@
   <div class="app">
     <aside class="sidebar">
       <h1 class="app-title">RenalCalc</h1>
-      <p class="app-subtitle">TSR Contínuas</p>
+      <p class="app-subtitle">TSR em Medicina Intensiva</p>
       <nav class="nav">
-        <button class="nav-btn active" data-section="solutions">Composição das soluções</button>
-        <button class="nav-btn" data-section="efluente">Dose de efluente &amp; FF</button>
-        <button class="nav-btn" data-section="hco3">Ajuste de HCO<sub>3</sub><sup>−</sup></button>
-        <button class="nav-btn" data-section="hyperna">Hipernatrémia</button>
-        <button class="nav-btn" data-section="hypoNa">Hiponatrémia</button>
+        <!-- Técnicas Contínuas -->
+        <button class="sidebar-main-btn" data-section="cont">
+          Técnicas Contínuas
+        </button>
+        <div class="sidebar-subgroup" data-parent="cont">
+          <button class="nav-btn" data-section="solutions">Composição das soluções</button>
+          <button class="nav-btn" data-section="efluente">Dose de efluente & FF</button>
+          <button class="nav-btn" data-section="anticoag">Anticoagulação</button>
+          <button class="nav-btn" data-section="hco3">Ajuste de HCO₃⁻</button>
+          <button class="nav-btn" data-section="hyperna">Hipernatrémia</button>
+          <button class="nav-btn" data-section="hypoNa">Hiponatrémia</button>
+        </div>
+
+        <!-- Técnicas Intermitentes -->
+        <button class="sidebar-main-btn" data-section="interm">
+          Técnicas Intermitentes
+        </button>
+        <div class="sidebar-subgroup" data-parent="interm">
+          <button class="nav-btn" data-section="sled">SLED</button>
+          <button class="nav-btn" data-section="hdconv">HD Convencional</button>
+        </div>
+
+
       </nav>
       <div class="footer-note">
         <small>
-          Ferramenta de apoio à prescrição de CRRT<br />
+          Ferramenta de apoio à prescrição de TSR<br />
           Serviço de Medicina Intensiva<br />
           ULS Almada-Seixal<br />
           © 2025 JG
@@ -197,9 +215,224 @@
             <p id="ffWarning" class="warning hidden">
               FF &gt; 25% – atenção ao risco aumentado de coagulação do filtro.
             </p>
+            <img src="images/HDFVVC.png" alt="Diagrama HDFVVC" class="tab-image" />
           </div>
         </div>
       </section>
+
+
+      <!-- SECÇÃO: ANTICOAGULAÇÃO CRRT -->
+      <section id="section-anticoag" class="section">
+        <h2>Anticoagulação na HDFVVC</h2>
+        <p class="section-description">
+          Escolha da estratégia de anticoagulação e prescrição inicial
+        </p>
+
+        <div class="card">
+          <h3>Escolha da estratégia</h3>
+
+          <label>
+            Condição que necessite de anticoagulação sistémica?
+            <select id="needsSystemicAnticoag">
+              <option value="">— selecionar —</option>
+              <option value="yes">Sim</option>
+              <option value="no">Não</option>
+            </select>
+          </label>
+
+          <label>
+            Contraindicação ao citrato?
+            <select id="citrateContra">
+              <option value="">— selecionar —</option>
+              <option value="yes">Sim</option>
+              <option value="no">Não</option>
+            </select>
+          </label>
+
+          <label>
+            Risco hemorrágico / coagulopatia significativa?
+            <select id="highBleedingRisk">
+              <option value="">— selecionar —</option>
+              <option value="yes">Sim</option>
+              <option value="no">Não</option>
+            </select>
+          </label>
+
+          <p>
+            <strong>Recomendação de anticoagulação:</strong>
+            <span id="anticoagRecommendation">—</span>
+          </p>
+        </div>
+
+        <div class="card" id="citrateBlock" hidden>
+          <h3>HDFVVC com anticoagulação regional com citrato</h3>
+
+          <p><strong>Antes de iniciar:</strong> se Ca<sup>2+</sup> &lt; 1,0 mmol/L → Cloreto de cálcio 1 g IV; se Mg &lt; 1,5 mg/dL → Sulfato de magnésio 1,5 g IV.</p>
+
+          <label>
+            Peso do doente (kg)
+            <input id="citrateWeightInput" type="number" min="40" max="200" step="1" />
+          </label>
+
+          <div id="citratePrescription">
+            <!-- preenchido por JS com Qb, dialisante, reposição, dose de efluente -->
+          </div>
+
+
+        </div>
+
+        <div class="card" id="heparinBlock" hidden>
+          <h3>HDFVVC com heparina não fraccionada</h3>
+
+          <label>
+            Peso do doente (kg)
+            <input id="heparinWeightInput" type="number" min="40" max="200" step="1" />
+          </label>
+
+          <div id="heparinPrescription">
+            <!-- preenchido por JS -->
+          </div>
+          <h4>Ajuste da perfusão pela aPTTr</h4>
+
+          <label>
+            aPTTr (razão)
+            <input id="heparinApttrInput" type="number" step="0.1" min="0" />
+          </label>
+
+          <label>
+            Hemorragia ativa?
+            <select id="heparinBleedingInput">
+              <option value="">— selecionar —</option>
+              <option value="no">Ausente</option>
+              <option value="yes">Presente</option>
+            </select>
+          </label>
+
+          <p>
+            <strong>Recomendação de ajuste:</strong>
+            <span id="heparinTitrationResult">—</span>
+          </p>
+
+          <h4>Contraindicações:</h4>
+          <ul>
+            <li>Hemorragia ativa</li>
+            <li>Coagulopatia significativa (INR &gt; 2.4, APTT &gt; 60, Plaquetas &lt; 60.000)</li>
+            <li>HIT (trombocitopenia induzida pela heparina)</li>
+            <li>Traumatismo craniano ou hemorragia intracraniana recente</li>
+            <li>Cirurgia major &lt; 24–48 h</li>
+          </ul>
+        </div>
+
+
+        <div class="card" id="noAnticoagBlock" hidden>
+          <h3>HDFVVC sem anticoagulação</h3>
+
+          <label>
+            Peso do doente (kg)
+            <input id="noAnticoagWeightInput" type="number" min="40" max="200" step="1" />
+          </label>
+
+          <div id="noAnticoagPrescription">
+            <!-- preenchido por JS -->
+          </div>
+
+          <p>Usar em doentes com risco hemorrágico muito elevado ou contraindicação simultânea a heparina e citrato.</p>
+        </div>
+
+
+        <div class="card" id="monitoringBlock" hidden>
+          <h3>Monitorização e reavaliação</h3>
+
+          <!-- Texto genérico dependente da estratégia (heparina / citrato / sem) -->
+          <div id="monitoringGeneric"></div>
+
+          <!-- Tabs só são usadas na técnica com citrato -->
+          <div id="monitoringTabsWrapper">
+            <div class="tabs">
+              <button class="tab-btn active" data-tab="monitor-citrate">Ajuste de citrato</button>
+              <button class="tab-btn" data-tab="monitor-calcium">Ajuste de cálcio</button>
+              <button class="tab-btn" data-tab="monitor-acidbase">Equilíbrio ácido–base</button>
+            </div>
+
+            <!-- TAB: Ajuste de Citrato -->
+            <div id="tab-monitor-citrate" class="tab-panel active">
+              <p class="hint">
+                Alvo de Ca<sup>2+</sup> pós-filtro: <strong>0,25–0,35 mmol/L</strong>
+              </p>
+              <label>
+                <span class="no-break">Ca<sup>2+</sup> pós-filtro (mmol/L)</span>
+                <input id="citrateCaPostFilterInput" type="number" step="0.01" min="0" />
+              </label>
+              <p>
+                <strong>Recomendação:</strong>
+                <span id="citrateAdjustmentResult">—</span>
+              </p>
+            </div>
+
+            <!-- TAB: Ajuste de Cálcio -->
+            <div id="tab-monitor-calcium" class="tab-panel">
+              <p class="hint">
+                Alvo de Ca<sup>2+</sup> sistémico: <strong>1,0–1,3 mmol/L</strong>
+              </p>
+              <label>
+                <span class="no-break">Ca<sup>2+</sup> sistémico (mmol/L)</span>
+                <input id="calciumSystemicInput" type="number" step="0.01" min="0" />
+              </label>
+              <label>
+                <span class="no-break">Perfusão atual de CaCl<sub>2</sub> (mL/h)</span>
+                <small>(opcional)</small>
+                <input id="calciumCurrentRateInput" type="number" step="1" min="0" />
+              </label>
+              <p>
+                <strong>Recomendação:</strong>
+                <span id="calciumAdjustmentResult">—</span>
+              </p>
+            </div>
+
+            <!-- TAB: Equilíbrio ácido–base -->
+            <div id="tab-monitor-acidbase" class="tab-panel">
+              <p class="hint">
+                Avaliação de equilíbrio ácido–base e relação cálcio total / cálcio ionizado na técnica com citrato.
+              </p>
+
+              <label>
+                Cálcio total (mg/dL)
+                <input id="abCaTotalInput" type="number" step="0.1" />
+              </label>
+
+              <label>
+                <span class="no-break">Ca<sup>2+</sup> sistémico (mmol/L)</span>
+                <input id="abCaIonInput" type="number" step="0.01" />
+              </label>
+
+              <p>
+                Relação Ca total / Ca<sup>2+</sup>:
+                <strong><span id="acidBaseRatioValue">—</span></strong>
+              </p>
+
+              <label>
+                pH
+                <input id="abPhInput" type="number" step="0.01" />
+              </label>
+
+              <label>
+                <span class="no-break">HCO<sub>3</sub><sup>−</sup> (mEq/L)</span>
+                <input id="abHco3Input" type="number" step="1" />
+              </label>
+
+              <p>
+                <strong>Recomendação:</strong>
+                <span id="acidBaseAdjustmentResult">—</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+
+
+
 
       <!-- SECÇÃO: HCO3 -->
       <section id="section-hco3" class="section">
@@ -433,6 +666,184 @@
             <p>• Reavaliar e ajustar prescrição a cada <strong>24 horas</strong> no mínimo</p>
         </div>
       </section>
+
+
+      <!-- SECÇÃO: SLED (AUTO-FLOW 5008) -->
+      <section id="section-sled" class="section">
+        <h2>SLED</h2>
+        <p class="section-description">
+          Prescrição de SLED com AUTO-FLOW com cálculo de UF, depuração e balanço electrolítico do banho.
+        </p>
+
+        <div class="grid-2">
+          <!-- CARD ESQUERDO: ENTRADAS -->
+          <div class="card">
+            <h3>Dados do doente &amp; prescrição</h3>
+
+            <label>Peso (kg)
+              <input id="sledPesoInput" type="number" step="1" />
+            </label>
+
+            <label>UF total alvo (L)
+              <input id="sledUfTotalInput" type="number" step="0.1" />
+            </label>
+
+            <label>Duração da sessão (h)
+              <input id="sledDuracaoInput" type="number" value="8" step="1" />
+            </label>
+
+            <label>Qb (mL/min)
+              <input id="sledQbInput" type="number" value="200" step="10" />
+            </label>
+
+            <h3>Banho (dialisante)</h3>
+
+            <label>Na⁺ no banho (mEq/L)
+              <input id="sledNaBathInput" type="number" value="140" step="1" />
+            </label>
+
+            <label>K⁺ no banho (mEq/L)
+              <input id="sledKBathInput" type="number" value="3" step="0.5" />
+            </label>
+
+            <label>HCO₃⁻ no banho (mEq/L)
+              <input id="sledHco3BathInput" type="number" value="32" step="1" />
+            </label>
+
+            <label>Na⁺ plasmático do doente (mEq/L)
+              <input id="sledNaPatientInput" type="number" placeholder="opcional" />
+            </label>
+
+            <label>HCO₃⁻ plasmático (mEq/L)
+              <input id="sledHco3PatientInput" type="number" placeholder="opcional" />
+            </label>
+
+            <button id="sledCalcBtn" class="primary-btn">Calcular</button>
+          </div>
+
+          <!-- CARD DIREITO: RESULTADOS -->
+          <div class="card">
+            <h3>Resultados SLED</h3>
+
+            <ul class="results-list">
+              <li><span>UF/h</span><strong id="sledUfPorHora">–</strong></li>
+              <li><span>UF/kg/h</span><strong id="sledUfPorKgHora">–</strong></li>
+              <li><span>Qd estimado (AUTO-FLOW)</span><strong id="sledQdEstimado">–</strong></li>
+              <li><span>K aproximado</span><strong id="sledKDepuracao">–</strong></li>
+              <li><span>Kt total</span><strong id="sledKtTotal">–</strong></li>
+              <li><span>Volume de distribuição</span><strong id="sledVTotal">–</strong></li>
+              <li><span>Kt/V</span><strong id="sledKtV">–</strong></li>
+              <li><span>Remoção de Ureia estimada</span><strong id="sledUreaRemoval">–</strong></li>
+            </ul>
+
+            <h3>Fluxo &amp; equilíbrio eletrolítico</h3>
+            <ul class="results-list">
+              <li><span>Tendência ΔNa</span><strong id="sledDeltaNa">–</strong></li>
+              <li><span>Carga de HCO₃⁻</span><strong id="sledHco3Carga">–</strong></li>
+              <li><span>Dose K⁺</span><strong id="sledKComment">–</strong></li>
+            </ul>
+
+            <p class="hint" id="sledEfficiencyNote"></p>
+            <p id="sledWarning" class="warning hidden"></p>
+            <p id="sledCommentary" class="hint"></p>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- SECÇÃO: HD CONVENCIONAL -->
+      <section id="section-hdconv" class="section">
+        <h2>Hemodiálise Convencional</h2>
+        <p class="section-description">
+          Prescrição de HD intermitente e avaliação de UF e dose dialítica.
+        </p>
+
+        <div class="grid-2">
+          <div class="card">
+            <h3>Prescrição</h3>
+
+            <label>Peso pré-HD (kg)
+              <input id="hdPesoPreInput" type="number" step="1" />
+            </label>
+
+            <label>Peso seco / alvo (kg)
+              <input id="hdPesoSecoInput" type="number" step="1" />
+            </label>
+
+            <label>Duração da sessão (h)
+              <input id="hdDuracaoInput" type="number" value="4" step="0.5" />
+            </label>
+
+            <label>Qb (mL/min)
+              <input id="hdQbInput" type="number" value="300" step="10" />
+            </label>
+
+            <label>Qd (mL/min)
+              <input id="hdQdInput" type="number" value="500" step="50" />
+            </label>
+
+            <label>Na⁺ no banho (mEq/L)
+              <input id="hdNaBathInput" type="number" value="140" step="1" />
+            </label>
+
+            <label>K⁺ no banho (mEq/L)
+              <input id="hdKBathInput" type="number" value="2" step="0.5" />
+            </label>
+
+            <label>HCO₃⁻ no banho (mEq/L)
+              <input id="hdHco3BathInput" type="number" value="32" step="1" />
+            </label>
+
+            <button id="hdCalcBtn" class="primary-btn">Calcular</button>
+          </div>
+
+          <div class="card">
+            <h3>Resultados</h3>
+
+            <ul class="results-list">
+              <li>
+                <span>UF total</span>
+                <strong id="hdUfTotal">–</strong>
+              </li>
+              <li>
+                <span>UF/h</span>
+                <strong id="hdUfHora">–</strong>
+              </li>
+              <li>
+                <span>UF/kg/h</span>
+                <strong id="hdUfKgHora">–</strong>
+              </li>
+              <li>
+                <span>K aproximado (depuração)</span>
+                <strong id="hdKDepuracao">–</strong>
+              </li>
+              <li>
+                <span>Kt total da sessão</span>
+                <strong id="hdKtTotal">–</strong>
+              </li>
+              <li>
+                <span>Volume de distribuição V (0,55 × peso)</span>
+                <strong id="hdVTotal">–</strong>
+              </li>
+              <li>
+                <span>Kt/V estimado</span>
+                <strong id="hdKtV">–</strong>
+              </li>
+              <li>
+                <span>Remoção estimada de ureia</span>
+                <strong id="hdUreaRemoval">–</strong>
+              </li>
+            </ul>
+
+            <p class="hint">
+              Em HD intermitente, Kt/V ≥ 1,2 corresponde, em regra, a dose dialítica adequada.
+            </p>
+            <p id="hdWarning" class="warning hidden"></p>
+            <p id="hdCommentary" class="hint"></p>
+          </div>
+        </div>
+      </section>
+
     </main>
   </div>
 

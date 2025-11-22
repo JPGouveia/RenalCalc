@@ -105,6 +105,16 @@ body {
   opacity: 0.8;
 }
 
+.nav-section-title {
+  margin: 12px 8px 4px;
+  font-size: 0.75rem;
+  color: var(--muted);
+  opacity: 0.7;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+
 /* Main */
 
 .main {
@@ -169,6 +179,64 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* --- BOTÕES PRINCIPAIS (accordion) --- */
+/* Cabeçalhos: Técnicas Contínuas / Técnicas Intermitentes */
+.sidebar-main-btn {
+  width: 100%;
+  text-align: left;
+  padding: 6px 8px;
+  margin: 10px 4px 2px;
+
+  background: transparent;
+  border: none;
+
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+
+  color: var(--muted);
+  cursor: pointer;
+
+  transition:
+    color 0.15s ease,
+    background 0.15s ease,
+    padding-left 0.15s ease;
+}
+
+/* Hover: só um ligeiro destaque em linha com o tema dark */
+.sidebar-main-btn:hover {
+  color: var(--accent);
+  background: rgba(15, 23, 42, 0.9);
+}
+
+/* Ativo: igual ao hover + ligeiro recuo à esquerda */
+.sidebar-main-btn.active {
+  color: var(--accent);
+  background: rgba(15, 23, 42, 0.9);
+  padding-left: 14px;
+}
+
+/* --- SUB-OPÇÕES (grupos do accordion) --- */
+.sidebar-subgroup {
+  display: none;
+  margin: 4px 0 2px;
+  padding-left: 4px; /* só um pequeno recuo visual */
+}
+
+.sidebar-subgroup.open {
+  display: block;
+}
+
+/* Garantir que as sub-opções ficam em coluna,
+   mas SEM mexer na aparência dos .nav-btn */
+.sidebar-subgroup > .nav-btn {
+  display: block;
+}
+
+
 
 /* Fields */
 
@@ -381,4 +449,9 @@ code {
   color: #facc15; /* amarelo */
   font-size: 0.9rem;
   line-height: 1.35;
+}
+
+.tab-image {
+  max-width: 100%;
+  height: auto;
 }
