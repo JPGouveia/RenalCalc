@@ -1,4 +1,6 @@
 // @author: João Gouveia
+
+
 // Helper para ler números (aceita vírgula ou ponto)
 function getNumber(id, defaultValue = 0) {
   const el = document.getElementById(id);
@@ -782,6 +784,27 @@ function setupAnticoag() {
 
 }
 
+// contraindicações citrato
+function setupCitrateInfoBox() {
+  const citrateSelect = document.getElementById("citrateContra");
+  const citrateInfoBox = document.getElementById("citrateContraInfo");
+
+  if (!citrateSelect || !citrateInfoBox) return;
+
+  const updateCitrateInfoVisibility = () => {
+    if (!citrateSelect.value) {
+      citrateInfoBox.classList.remove("hidden");
+    } else {
+      citrateInfoBox.classList.add("hidden");
+    }
+  };
+
+  citrateSelect.addEventListener("change", updateCitrateInfoVisibility);
+  updateCitrateInfoVisibility();
+}
+
+
+
 /* ======================
    SLED
    ====================== */
@@ -845,7 +868,7 @@ function setupSled() {
 
   calcBtn.addEventListener("click", () => {
     const peso = parseNumberValue(pesoInput);
-    const ufTotalL = parseNumberValue(ufTotalInput);
+    const ufTotalMl = parseNumberValue(ufTotalInput); // agora em mL
     const duracaoH = parseNumberValue(duracaoInput);
     const qb = parseNumberValue(qbInput);
     const risco = riscoSelect ? riscoSelect.value : "";
@@ -858,17 +881,49 @@ function setupSled() {
     if (efficiencyNoteEl) efficiencyNoteEl.textContent = "";
     if (commentaryEl) commentaryEl.innerHTML = "";
 
-    // validação básica
-    if (
-      !isFinite(peso) ||
-      peso <= 0 ||
-      !isFinite(ufTotalL) ||
-      ufTotalL < 0 ||
-      !isFinite(duracaoH) ||
-      duracaoH <= 0 ||
-      !isFinite(qb) ||
-      qb <= 0
-    ) {
+    // ==============================
+    // Validação com limites da 5008
+    // ==============================
+    let erro = "";
+
+    if (!isFinite(peso) || peso < 40 || peso > 200) {
+      erro += "Peso deve estar entre 40 e 200 kg.\n";
+    }
+    if (!isFinite(duracaoH) || duracaoH < 6 || duracaoH > 12) {
+      erro += "Duração da sessão deve estar entre 6 e 12 horas.\n";
+    }
+    if (!isFinite(qb) || qb < 100 || qb > 600) {
+      erro += "Qb deve estar entre 100 e 600 mL/min.\n";
+    }
+
+    const naBath = parseNumberValue(document.getElementById("sledNaBathInput"));
+    if (!isFinite(naBath) || naBath < 125 || naBath > 150) {
+      erro += "Na⁺ no banho deve estar entre 125 e 150 mEq/L.\n";
+    }
+
+    const kBath = parseNumberValue(document.getElementById("sledKBathInput"));
+    if (!isFinite(kBath) || kBath < 0 || kBath > 5) {
+      erro += "K⁺ no banho deve estar entre 0 e 5 mEq/L.\n";
+    }
+
+    const hco3Bath = parseNumberValue(document.getElementById("sledHco3BathInput"));
+    if (!isFinite(hco3Bath) || hco3Bath < 24 || hco3Bath > 40) {
+      erro += "HCO₃⁻ no banho deve estar entre 24 e 40 mEq/L.\n";
+    }
+
+    if (!isFinite(ufTotalMl) || ufTotalMl < 0) {
+      erro += "UF total alvo deve ser ≥ 0 mL.\n";
+    } else if (isFinite(duracaoH)) {
+      const ufMaxMl = 4000 * duracaoH; // limite 4000 mL/h
+      if (ufTotalMl > ufMaxMl) {
+        erro += `UF total alvo não deve exceder ${ufMaxMl.toFixed(
+          0
+        )} mL (4000 mL/h × duração).\n`;
+      }
+    }
+
+    if (erro) {
+      // limpa resultados
       formatResult(ufHoraEl, NaN, 0, "");
       formatResult(ufKgHoraEl, NaN, 1, "");
       formatResult(qdEstimadoEl, NaN, 0, "");
@@ -877,16 +932,19 @@ function setupSled() {
       formatResult(vTotalEl, NaN, 1, "");
       formatResult(ktvEl, NaN, 2, "");
       formatResult(ureaRemovalEl, NaN, 0, "");
+      formatResult(deltaNaEl, NaN, 1, "");
+      formatResult(hco3CargaEl, NaN, 0, "");
+      if (kCommentEl) kCommentEl.textContent = "—";
+
       if (warningEl) {
-        warningEl.textContent =
-          "Preencha peso, UF total, duração e Qb com valores válidos.";
+        warningEl.textContent = erro.trim();
         warningEl.classList.remove("hidden");
       }
       return;
     }
 
-    // 1) UF
-    const ufHora = (ufTotalL * 1000) / duracaoH; // mL/h
+    // 1) UF (mL/h e mL/kg/h)
+    const ufHora = ufTotalMl / duracaoH; // mL/h
     const ufKgHora = ufHora / peso; // mL/kg/h
 
     formatResult(ufHoraEl, ufHora, 0, "mL/h");
@@ -978,7 +1036,6 @@ function setupSled() {
     /* ======================================================
        10) ΔNa — Tendência de sódio (banho vs doente)
        ====================================================== */
-    const naBath = parseNumberValue(document.getElementById("sledNaBathInput"));
     let naPatient = parseNumberValue(document.getElementById("sledNaPatientInput"));
     if (!isFinite(naPatient)) naPatient = 140;
 
@@ -988,18 +1045,19 @@ function setupSled() {
     }
     formatResult(deltaNaEl, deltaNa, 1, "mEq/L");
 
-    if (isFinite(deltaNa)) {
+    if (isFinite(deltaNa) && commentaryEl) {
       if (deltaNa > 4) {
-        commentaryEl.innerHTML += " Banho hipertónico: tendência para subir Na<sup>+</sup>.";
+        commentaryEl.innerHTML +=
+          ' <span class="warning"><strong>Banho hipertónico: tendência para subir Na<sup>+</sup>.</strong></span>';
       } else if (deltaNa < -4) {
-        commentaryEl.innerHTML += " Banho hipotónico: tendência para baixar Na<sup>+</sup>.";
+        commentaryEl.innerHTML +=
+          ' <span class="warning"><strong>Banho hipotónico: tendência para baixar Na<sup>+</sup>.</strong></span>';
       }
     }
 
     /* ======================================================
        11) Carga de HCO₃⁻
        ====================================================== */
-    const hco3Bath = parseNumberValue(document.getElementById("sledHco3BathInput"));
     let hco3Patient = parseNumberValue(
       document.getElementById("sledHco3PatientInput")
     );
@@ -1012,29 +1070,38 @@ function setupSled() {
 
     formatResult(hco3CargaEl, hco3Carga, 0, "mEq");
 
-    if (isFinite(hco3Carga)) {
+    if (isFinite(hco3Carga) && commentaryEl) {
       if (hco3Carga > 0) {
         commentaryEl.innerHTML += " Banho com tendência alcalinizante.";
       } else if (hco3Carga < 0) {
-        commentaryEl.innerHTML += " Banho com tendência acidificante.";
+        commentaryEl.innerHTML +=
+          ' <span class="warning"><strong>Banho com tendência acidificante.</strong></span>';
       }
     }
 
     /* ======================================================
        12) Comentário sobre K+
        ====================================================== */
-    const kBath = parseNumberValue(document.getElementById("sledKBathInput"));
     let kComment = "—";
 
+    kCommentEl.classList.remove("warning");
+
     if (isFinite(kBath)) {
-      if (kBath <= 2) kComment = "Banho muito baixo → risco de hipocalémia.";
-      else if (kBath >= 4) kComment = "Banho alto → útil em hipocalémia, cautela se hipercalémia.";
-      else kComment = "Banho habitual para SLED.";
+      if (kBath <= 2) {
+        kCommentEl.classList.add("warning");
+        kComment = "Banho muito baixo → risco de hipocalémia.";
+      } else if (kBath >= 4) {
+        kCommentEl.classList.add("warning");
+        kComment = "Banho alto → útil em hipocalémia, cautela se hipercalémia.";
+      } else {
+        kComment = "Banho habitual para SLED.";
+      }
     }
 
-    kCommentEl.textContent = kComment;
+    kCommentEl.innerHTML = kComment;
   });
 }
+
 
 
 /* ======================
@@ -1050,6 +1117,9 @@ function setupHdConv() {
   const duracaoInput = document.getElementById("hdDuracaoInput");
   const qbInput = document.getElementById("hdQbInput");
   const qdInput = document.getElementById("hdQdInput");
+  const naBathInput = document.getElementById("hdNaBathInput");
+  const kBathInput = document.getElementById("hdKBathInput");
+  const hco3BathInput = document.getElementById("hdHco3BathInput");
 
   const ufTotalEl = document.getElementById("hdUfTotal");
   const ufHoraEl = document.getElementById("hdUfHora");
@@ -1059,162 +1129,177 @@ function setupHdConv() {
   const vTotalEl = document.getElementById("hdVTotal");
   const ktvEl = document.getElementById("hdKtV");
   const ureaRemovalEl = document.getElementById("hdUreaRemoval");
+
   const warningEl = document.getElementById("hdWarning");
   const commentaryEl = document.getElementById("hdCommentary");
 
   calcBtn.addEventListener("click", () => {
-    const pesoPre = parseNumberValue(pesoPreInput);
-    const pesoSeco = parseNumberValue(pesoSecoInput);
-    const duracaoH = parseNumberValue(duracaoInput);
-    const qb = parseNumberValue(qbInput);
-    let qd = parseNumberValue(qdInput);
-
+    // limpar mensagens
     if (warningEl) {
       warningEl.textContent = "";
       warningEl.classList.add("hidden");
     }
     if (commentaryEl) commentaryEl.textContent = "";
 
-    // Validação básica
-    if (!isFinite(pesoPre) || pesoPre <= 0 || !isFinite(pesoSeco) || !isFinite(duracaoH) || duracaoH <= 0) {
-      formatResult(ufTotalEl, NaN, 1, "L");
-      formatResult(ufHoraEl, NaN, 0, "mL/h");
-      formatResult(ufKgHoraEl, NaN, 1, "mL/kg/h");
-      if (kDepuracaoEl) kDepuracaoEl.textContent = "—";
-      formatResult(ktTotalEl, NaN, 1, "L");
-      formatResult(vTotalEl, NaN, 1, "L");
+    // ler valores
+    const pesoPre = parseNumberValue(pesoPreInput);
+    const pesoSeco = parseNumberValue(pesoSecoInput);
+    const duracaoH = parseNumberValue(duracaoInput);
+    const qb = parseNumberValue(qbInput);
+    const qd = parseNumberValue(qdInput);
+    const naBath = parseNumberValue(naBathInput);
+    const kBath = parseNumberValue(kBathInput);
+    const hco3Bath = parseNumberValue(hco3BathInput);
+
+    // ============================
+    // Validação de limites HD conv
+    // ============================
+    let erro = "";
+
+    if (!isFinite(pesoPre) || pesoPre < 40 || pesoPre > 200) {
+      erro += "Peso pré-HD deve estar entre 40 e 200 kg.\n";
+    }
+    if (!isFinite(pesoSeco) || pesoSeco < 40 || pesoSeco > 200) {
+      erro += "Peso seco / alvo deve estar entre 40 e 200 kg.\n";
+    }
+    if (isFinite(pesoPre) && isFinite(pesoSeco) && pesoSeco > pesoPre) {
+      erro += "Peso seco não pode ser superior ao peso pré-HD.\n";
+    }
+
+    if (!isFinite(duracaoH) || duracaoH < 2 || duracaoH > 6) {
+      erro += "Duração da sessão deve estar entre 2 e 6 horas.\n";
+    }
+
+    if (!isFinite(qb) || qb < 150 || qb > 600) {
+      erro += "Qb deve estar entre 150 e 600 mL/min.\n";
+    }
+
+    if (!isFinite(qd) || qd < 300 || qd > 800) {
+      erro += "Qd deve estar entre 300 e 800 mL/min.\n";
+    }
+
+    if (!isFinite(naBath) || naBath < 125 || naBath > 150) {
+      erro += "Na⁺ no banho deve estar entre 125 e 150 mEq/L.\n";
+    }
+
+    if (!isFinite(kBath) || kBath < 0 || kBath > 5) {
+      erro += "K⁺ no banho deve estar entre 0 e 5 mEq/L.\n";
+    }
+
+    if (!isFinite(hco3Bath) || hco3Bath < 24 || hco3Bath > 40) {
+      erro += "HCO₃⁻ no banho deve estar entre 24 e 40 mEq/L.\n";
+    }
+
+    // se há erro → limpar tudo e parar
+    if (erro) {
+      formatResult(ufTotalEl, NaN, 0, "");
+      formatResult(ufHoraEl, NaN, 0, "");
+      formatResult(ufKgHoraEl, NaN, 1, "");
+      formatResult(kDepuracaoEl, NaN, 1, "");
+      formatResult(ktTotalEl, NaN, 1, "");
+      formatResult(vTotalEl, NaN, 1, "");
       formatResult(ktvEl, NaN, 2, "");
-      formatResult(ureaRemovalEl, NaN, 0, "%");
+      formatResult(ureaRemovalEl, NaN, 0, "");
+
       if (warningEl) {
-        warningEl.textContent = "Preencha peso pré, peso seco e duração com valores válidos.";
+        warningEl.textContent = erro.trim();
         warningEl.classList.remove("hidden");
       }
       return;
     }
 
-    // 1) UF
-    const deltaPeso = pesoPre - pesoSeco; // kg
+    // ============================
+    // 1) UF total, UF/h, UF/kg/h
+    // ============================
+    const ufTotalMl = (pesoPre - pesoSeco) * 1000; // mL
+    const ufHora = ufTotalMl / duracaoH; // mL/h
+    const ufKgHora = ufHora / pesoPre; // mL/kg/h
 
-    if (deltaPeso <= 0) {
-      formatResult(ufTotalEl, 0, 1, "L");
-      formatResult(ufHoraEl, 0, 0, "mL/h");
-      formatResult(ufKgHoraEl, 0, 1, "mL/kg/h");
-      if (warningEl) {
-        warningEl.textContent =
-          "Peso seco igual ou superior ao peso pré: UF significativa pode não ser necessária.";
-        warningEl.classList.remove("hidden");
-      }
-    } else {
-      const ufTotalL = deltaPeso; // 1 kg ≈ 1 L
-      const ufHora = (ufTotalL * 1000) / duracaoH; // mL/h
-      const ufKgHora = ufHora / pesoPre; // mL/kg/h
+    formatResult(ufTotalEl, ufTotalMl, 0, "mL");
+    formatResult(ufHoraEl, ufHora, 0, "mL/h");
+    formatResult(ufKgHoraEl, ufKgHora, 1, "mL/kg/h");
 
-      formatResult(ufTotalEl, ufTotalL, 1, "L");
-      formatResult(ufHoraEl, ufHora, 0, "mL/h");
-      formatResult(ufKgHoraEl, ufKgHora, 1, "mL/kg/h");
-    }
-
-    // 2) Depuração K (≈ Qd)
-    // Se Qd não for preenchido, podemos assumir valor típico (500 mL/min),
-    // mas só se Qb for razoável.
-    if (!isFinite(qd) || qd <= 0) {
-      if (isFinite(qb) && qb > 0) {
-        qd = Math.min(500, Math.max(300, qb * 1.5)); // heurística simples
-      } else {
-        qd = NaN;
-      }
-    }
-
-    let kText = "—";
+    // ============================
+    // 2) Depuração K ~ Qd
+    // ============================
     let kLh = NaN;
-
+    let kText = "—";
     if (isFinite(qd)) {
-      kLh = (qd * 60) / 1000; // L/h
+      kLh = (qd * 60) / 1000; // mL/min → L/h
       const kMlMinRounded = Math.round(qd);
       const kLhRounded = Math.round(kLh * 10) / 10;
       kText = `${kMlMinRounded} mL/min (~${kLhRounded.toFixed(1)} L/h)`;
     }
+    if (kDepuracaoEl) kDepuracaoEl.textContent = kText;
 
-    if (kDepuracaoEl) {
-      kDepuracaoEl.textContent = kText;
-    }
-
+    // ============================
     // 3) Kt total
+    // ============================
     let ktL = NaN;
-    if (isFinite(kLh)) {
-      ktL = kLh * duracaoH; // L
-    }
+    if (isFinite(kLh)) ktL = kLh * duracaoH;
     formatResult(ktTotalEl, ktL, 1, "L");
 
-    // 4) Volume de distribuição V (0,55 × peso)
-    const vL = 0.55 * pesoPre;
+    // ============================
+    // 4) V (0,55 × peso seco)
+    // ============================
+    const vL = 0.55 * pesoSeco;
     formatResult(vTotalEl, vL, 1, "L");
 
+    // ============================
     // 5) Kt/V
+    // ============================
     let ktv = NaN;
-    if (isFinite(ktL) && isFinite(vL) && vL > 0) {
-      ktv = ktL / vL;
-    }
+    if (isFinite(ktL) && isFinite(vL) && vL > 0) ktv = ktL / vL;
     formatResult(ktvEl, ktv, 2, "");
 
-    // 6) Remoção percentual de ureia
+    // ============================
+    // 6) Remoção de ureia
+    // ============================
     let removalPercent = NaN;
-    if (isFinite(ktv) && ktv > 0) {
-      removalPercent = (1 - Math.exp(-ktv)) * 100; // 1 - e^(-Kt/V)
-    }
+    if (isFinite(ktv) && ktv > 0) removalPercent = (1 - Math.exp(-ktv)) * 100;
     formatResult(ureaRemovalEl, removalPercent, 0, "%");
 
-    // 7) Comentário global (UF + dose dialítica)
+    // ============================
+    // 7) Warnings clínicos
+    // ============================
+    let warnings = [];
     let comentario = "";
-    let warning = "";
 
-    // Comentário UF, se calculada
-    const ufKgHoraText = ufKgHoraEl ? ufKgHoraEl.textContent : "";
-    const ufKgHoraNum = ufKgHoraText && ufKgHoraText !== "—"
-      ? parseFloat(ufKgHoraText)
-      : NaN;
-
-    if (isFinite(ufKgHoraNum)) {
-      if (ufKgHoraNum <= 10) {
-        comentario = "Taxa de UF habitualmente bem tolerada na maioria dos doentes.";
-      } else if (ufKgHoraNum <= 13) {
-        comentario =
-          "UF/kg/h no limite superior recomendado (10–13 mL/kg/h). Monitorizar tolerância hemodinâmica.";
+    // UF/kg/h
+    if (isFinite(ufKgHora)) {
+      if (ufKgHora <= 10) {
+        comentario += "UF em faixa segura para a maioria dos doentes. ";
+      } else if (ufKgHora <= 13) {
+        comentario += "UF no limite superior recomendado (10–13 mL/kg/h). ";
+        warnings.push("UF elevada: monitorizar hipotensão e sintomas intradiálise.");
       } else {
-        comentario =
-          "UF/kg/h elevada: aumenta o risco de hipotensão e hipoperfusão.";
-        warning =
-          "Considerar reduzir o objetivo de perda de peso ou prolongar a sessão para diminuir UF/kg/h.";
+        comentario += "UF excessiva. ";
+        warnings.push("UF > 13 mL/kg/h – considerar reduzir UF total ou prolongar a sessão.");
       }
     }
 
-    // Comentário sobre dose (Kt/V)
+    // Dose dialítica (Kt/V)
     if (isFinite(ktv)) {
-      if (ktv < 1.0) {
-        comentario +=
-          " Dose dialítica estimada baixa (Kt/V < 1,0). Se possível, considerar aumentar duração ou fluxos.";
-      } else if (ktv >= 1.0 && ktv < 1.2) {
-        comentario +=
-          " Dose dialítica no limite inferior (Kt/V 1,0–1,2).";
+      if (ktv < 1.2) {
+        comentario += "Kt/V < 1,2 – dose dialítica provavelmente insuficiente.";
       } else if (ktv >= 1.2 && ktv <= 1.6) {
-        comentario +=
-          " Dose dialítica adequada para HD convencional (Kt/V ≥ 1,2).";
-      } else if (ktv > 1.6) {
-        comentario +=
-          " Dose dialítica elevada; do ponto de vista de depuração, pode não ser necessário prolongar mais.";
+        comentario += "Kt/V adequado para HD intermitente.";
+      } else {
+        comentario += "Kt/V elevado – dose alta; ponderar se é necessário em todos os dias.";
       }
     }
 
-    if (commentaryEl) {
-      commentaryEl.textContent = comentario || "";
-    }
+    if (commentaryEl) commentaryEl.textContent = comentario.trim();
 
-    if (warning && warningEl) {
-      warningEl.textContent = warning;
+    if (warnings.length && warningEl) {
+      warningEl.textContent = warnings.join(" ");
       warningEl.classList.remove("hidden");
+    } else if (warningEl) {
+      warningEl.classList.add("hidden");
     }
   });
 }
+
 
 
 
@@ -1225,6 +1310,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setupNav();
   setupTabs();
   setupAnticoag();
+  setupCitrateInfoBox();
   setupEfluente();
   setupHco3();
   setupHypernatremia();

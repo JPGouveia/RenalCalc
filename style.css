@@ -451,7 +451,32 @@ code {
   line-height: 1.35;
 }
 
+.info-box {
+  margin-top: 8px;
+  margin-bottom: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(248, 113, 113, 0.5); /* usa o tom de perigo suave */
+  background: rgba(248, 113, 113, 0.08);
+  font-size: 0.86rem;
+  color: var(--muted);
+}
+
+.info-box strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--danger);
+}
+
+
+
 .tab-image {
   max-width: 100%;
   height: auto;
+}
+
+
+.sled-alert {
+  color: var(--danger);
+  font-weight: 700;
 }
